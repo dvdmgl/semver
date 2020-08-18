@@ -19,7 +19,7 @@ use std::hash;
 use std::result;
 use std::str;
 
-use semver_parser;
+use crate::semver_parser;
 
 #[cfg(feature = "serde")]
 use serde::de::{self, Deserialize, Deserializer, Visitor};
@@ -41,8 +41,12 @@ pub enum Identifier {
 impl From<semver_parser::version::Identifier> for Identifier {
     fn from(other: semver_parser::version::Identifier) -> Identifier {
         match other {
-            semver_parser::version::Identifier::Numeric(n) => Identifier::Numeric(n),
-            semver_parser::version::Identifier::AlphaNumeric(s) => Identifier::AlphaNumeric(s),
+            semver_parser::version::Identifier::Numeric(n) => {
+                Identifier::Numeric(n)
+            }
+            semver_parser::version::Identifier::AlphaNumeric(s) => {
+                Identifier::AlphaNumeric(s)
+            }
         }
     }
 }
@@ -83,18 +87,27 @@ impl<'de> Deserialize<'de> for Identifier {
         impl<'de> Visitor<'de> for IdentifierVisitor {
             type Value = Identifier;
 
-            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+            fn expecting(
+                &self,
+                formatter: &mut fmt::Formatter,
+            ) -> fmt::Result {
                 formatter.write_str("a SemVer pre-release or build identifier")
             }
 
-            fn visit_u64<E>(self, numeric: u64) -> result::Result<Self::Value, E>
+            fn visit_u64<E>(
+                self,
+                numeric: u64,
+            ) -> result::Result<Self::Value, E>
             where
                 E: de::Error,
             {
                 Ok(Identifier::Numeric(numeric))
             }
 
-            fn visit_str<E>(self, alphanumeric: &str) -> result::Result<Self::Value, E>
+            fn visit_str<E>(
+                self,
+                alphanumeric: &str,
+            ) -> result::Result<Self::Value, E>
             where
                 E: de::Error,
             {
@@ -160,7 +173,10 @@ impl<'de> Deserialize<'de> for Version {
         impl<'de> Visitor<'de> for VersionVisitor {
             type Value = Version;
 
-            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+            fn expecting(
+                &self,
+                formatter: &mut fmt::Formatter,
+            ) -> fmt::Result {
                 formatter.write_str("a SemVer version as a string")
             }
 
@@ -237,7 +253,13 @@ impl Version {
 
         match res {
             // Convert plain String error into proper ParseError
-            Err(e) => Err(SemVerError::ParseError(e)),
+            Err(e) => Err(SemVerError::ParseError(
+                e.to_string()
+                    .to_string()
+                    .to_string()
+                    .to_string()
+                    .to_string(),
+            )),
             Ok(v) => Ok(From::from(v)),
         }
     }
@@ -291,22 +313,23 @@ impl str::FromStr for Version {
 impl fmt::Display for Version {
     #[inline]
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let mut result = format!("{}.{}.{}", self.major, self.minor, self.patch);
+        let mut result =
+            format!("{}.{}.{}", self.major, self.minor, self.patch);
 
         if !self.pre.is_empty() {
-            result.push_str("-");
+            result.push('-');
             for (i, x) in self.pre.iter().enumerate() {
                 if i != 0 {
-                    result.push_str(".");
+                    result.push('.');
                 }
                 result.push_str(format!("{}", x).as_ref());
             }
         }
         if !self.build.is_empty() {
-            result.push_str("+");
+            result.push('+');
             for (i, x) in self.build.iter().enumerate() {
                 if i != 0 {
-                    result.push_str(".");
+                    result.push('.');
                 }
                 result.push_str(format!("{}", x).as_ref());
             }
@@ -391,7 +414,7 @@ mod tests {
     #[test]
     fn test_parse() {
         fn parse_error(e: &str) -> result::Result<Version, SemVerError> {
-            return Err(SemVerError::ParseError(e.to_string()));
+            Err(SemVerError::ParseError(e.to_string()))
         }
 
         assert_eq!(
@@ -668,8 +691,12 @@ mod tests {
         assert!(Version::parse("1.0.0") < Version::parse("1.2.3-alpha2"));
         assert!(Version::parse("1.2.0") < Version::parse("1.2.3-alpha2"));
         assert!(Version::parse("1.2.3-alpha1") < Version::parse("1.2.3"));
-        assert!(Version::parse("1.2.3-alpha1") < Version::parse("1.2.3-alpha2"));
-        assert!(!(Version::parse("1.2.3-alpha2") < Version::parse("1.2.3-alpha2")));
+        assert!(
+            Version::parse("1.2.3-alpha1") < Version::parse("1.2.3-alpha2")
+        );
+        assert!(
+            !(Version::parse("1.2.3-alpha2") < Version::parse("1.2.3-alpha2"))
+        );
         assert!(!(Version::parse("1.2.3+23") < Version::parse("1.2.3+42")));
     }
 
@@ -678,8 +705,12 @@ mod tests {
         assert!(Version::parse("0.0.0") <= Version::parse("1.2.3-alpha2"));
         assert!(Version::parse("1.0.0") <= Version::parse("1.2.3-alpha2"));
         assert!(Version::parse("1.2.0") <= Version::parse("1.2.3-alpha2"));
-        assert!(Version::parse("1.2.3-alpha1") <= Version::parse("1.2.3-alpha2"));
-        assert!(Version::parse("1.2.3-alpha2") <= Version::parse("1.2.3-alpha2"));
+        assert!(
+            Version::parse("1.2.3-alpha1") <= Version::parse("1.2.3-alpha2")
+        );
+        assert!(
+            Version::parse("1.2.3-alpha2") <= Version::parse("1.2.3-alpha2")
+        );
         assert!(Version::parse("1.2.3+23") <= Version::parse("1.2.3+42"));
     }
 
@@ -688,9 +719,13 @@ mod tests {
         assert!(Version::parse("1.2.3-alpha2") > Version::parse("0.0.0"));
         assert!(Version::parse("1.2.3-alpha2") > Version::parse("1.0.0"));
         assert!(Version::parse("1.2.3-alpha2") > Version::parse("1.2.0"));
-        assert!(Version::parse("1.2.3-alpha2") > Version::parse("1.2.3-alpha1"));
+        assert!(
+            Version::parse("1.2.3-alpha2") > Version::parse("1.2.3-alpha1")
+        );
         assert!(Version::parse("1.2.3") > Version::parse("1.2.3-alpha2"));
-        assert!(!(Version::parse("1.2.3-alpha2") > Version::parse("1.2.3-alpha2")));
+        assert!(
+            !(Version::parse("1.2.3-alpha2") > Version::parse("1.2.3-alpha2"))
+        );
         assert!(!(Version::parse("1.2.3+23") > Version::parse("1.2.3+42")));
     }
 
@@ -699,15 +734,19 @@ mod tests {
         assert!(Version::parse("1.2.3-alpha2") >= Version::parse("0.0.0"));
         assert!(Version::parse("1.2.3-alpha2") >= Version::parse("1.0.0"));
         assert!(Version::parse("1.2.3-alpha2") >= Version::parse("1.2.0"));
-        assert!(Version::parse("1.2.3-alpha2") >= Version::parse("1.2.3-alpha1"));
-        assert!(Version::parse("1.2.3-alpha2") >= Version::parse("1.2.3-alpha2"));
+        assert!(
+            Version::parse("1.2.3-alpha2") >= Version::parse("1.2.3-alpha1")
+        );
+        assert!(
+            Version::parse("1.2.3-alpha2") >= Version::parse("1.2.3-alpha2")
+        );
         assert!(Version::parse("1.2.3+23") >= Version::parse("1.2.3+42"));
     }
 
     #[test]
     fn test_prerelease_check() {
-        assert!(Version::parse("1.0.0").unwrap().is_prerelease() == false);
-        assert!(Version::parse("0.0.1").unwrap().is_prerelease() == false);
+        assert!(!Version::parse("1.0.0").unwrap().is_prerelease());
+        assert!(!Version::parse("0.0.1").unwrap().is_prerelease());
         assert!(Version::parse("4.1.4-alpha").unwrap().is_prerelease());
         assert!(Version::parse("1.0.0-beta294296").unwrap().is_prerelease());
     }
@@ -851,11 +890,14 @@ mod tests {
     #[test]
     fn test_from_str_errors() {
         fn parse_error(e: &str) -> result::Result<Version, SemVerError> {
-            return Err(SemVerError::ParseError(e.to_string()));
+            Err(SemVerError::ParseError(e.to_string()))
         }
 
         assert_eq!("".parse(), parse_error("Error parsing major identifier"));
-        assert_eq!("  ".parse(), parse_error("Error parsing major identifier"));
+        assert_eq!(
+            "  ".parse(),
+            parse_error("Error parsing major identifier")
+        );
         assert_eq!("1".parse(), parse_error("Expected dot"));
         assert_eq!("1.2".parse(), parse_error("Expected dot"));
         assert_eq!("1.2.3-".parse(), parse_error("Error parsing prerelease"));

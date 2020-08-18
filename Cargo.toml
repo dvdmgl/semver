@@ -1,5 +1,5 @@
 [package]
-
+edition = "2018"
 name = "semver"
 version = "0.9.0"
 authors = ["Steve Klabnik <steve@steveklabnik.com>", "The Rust Project Developers"]
@@ -18,9 +18,16 @@ categories = ["development-tools", "parser-implementations"]
 semver-parser = "0.7.0"
 serde = { version = "1.0", optional = true }
 diesel = { version = "1.1", optional = true }
+bytes = { version = "0.5.6", optional = true }
+byteorder = { version = "1.0", optional = true }
+postgres-types = { version = "0.1.2", features = ["derive"], optional = true }
+async-graphql-derive = { version = "1", optional = true }
+async-graphql = { version = "1", default-features = false, optional = true }
 
 [features]
 default = []
+with-rust-postgres-semver64 = ["postgres-types", "bytes", "byteorder"]
+with-async-graphql = ["async-graphql-derive", "async-graphql"]
 
 # are we testing on CI?
 ci = ["serde", "diesel/sqlite"]
@@ -28,3 +35,8 @@ ci = ["serde", "diesel/sqlite"]
 [dev-dependencies]
 serde_json = "1.0"
 serde_derive = "1.0"
+tokio-postgres = "0.5.5"
+tokio = { version = "0.2", features = ["full"] }
+futures = "0.3"
+# postgres-types = { version = "0.1.2", features = ["derive"] }
+# bytes = "0.5.6"

@@ -204,6 +204,10 @@ extern crate serde;
 #[macro_use]
 extern crate diesel;
 
+#[cfg(feature = "with-rust-postgres-semver64")]
+extern crate bytes;
+#[cfg(feature = "with-rust-postgres-semver64")]
+extern crate postgres_types;
 // We take the common approach of keeping our own module system private, and
 // just re-exporting the interface that we want.
 
@@ -220,3 +224,11 @@ mod version_req;
 #[cfg(feature = "diesel")]
 // Diesel support
 mod diesel_impls;
+
+// Rust postgres
+#[cfg(feature = "with-rust-postgres-semver64")]
+mod rust_postgres;
+
+// Rust postgres
+#[cfg(feature = "with-async-graphql")]
+mod async_graphql;

@@ -12,9 +12,7 @@ use std::error::Error;
 use std::fmt;
 use std::str;
 
-use semver_parser;
-use version::Identifier;
-use Version;
+use crate::{semver_parser, version::Identifier, Version};
 
 #[cfg(feature = "serde")]
 use serde::de::{self, Deserialize, Deserializer, Visitor};
@@ -45,7 +43,10 @@ impl From<semver_parser::range::VersionReq> for VersionReq {
 
 #[cfg(feature = "serde")]
 impl Serialize for VersionReq {
-    fn serialize<S>(&self, serializer: S) -> ::std::result::Result<S::Ok, S::Error>
+    fn serialize<S>(
+        &self,
+        serializer: S,
+    ) -> ::std::result::Result<S::Ok, S::Error>
     where
         S: Serializer,
     {
@@ -66,11 +67,17 @@ impl<'de> Deserialize<'de> for VersionReq {
         impl<'de> Visitor<'de> for VersionReqVisitor {
             type Value = VersionReq;
 
-            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+            fn expecting(
+                &self,
+                formatter: &mut fmt::Formatter,
+            ) -> fmt::Result {
                 formatter.write_str("a SemVer version requirement as a string")
             }
 
-            fn visit_str<E>(self, v: &str) -> ::std::result::Result<Self::Value, E>
+            fn visit_str<E>(
+                self,
+                v: &str,
+            ) -> ::std::result::Result<Self::Value, E>
             where
                 E: de::Error,
             {
@@ -97,7 +104,7 @@ enum Op {
     Lt,                        // Less than
     LtEq,                      // Less than or equal to
     Tilde,                     // e.g. ~1.0.0
-    Compatible,                // compatible by definition of semver, indicated by ^
+    Compatible, // compatible by definition of semver, indicated by ^
     Wildcard(WildcardVersion), // x.y.*, x.*, *
 }
 
@@ -113,9 +120,15 @@ impl From<semver_parser::range::Op> for Op {
             range::Op::Tilde => Op::Tilde,
             range::Op::Compatible => Op::Compatible,
             range::Op::Wildcard(version) => match version {
-                range::WildcardVersion::Major => Op::Wildcard(WildcardVersion::Major),
-                range::WildcardVersion::Minor => Op::Wildcard(WildcardVersion::Minor),
-                range::WildcardVersion::Patch => Op::Wildcard(WildcardVersion::Patch),
+                range::WildcardVersion::Major => {
+                    Op::Wildcard(WildcardVersion::Major)
+                }
+                range::WildcardVersion::Minor => {
+                    Op::Wildcard(WildcardVersion::Minor)
+                }
+                range::WildcardVersion::Patch => {
+                    Op::Wildcard(WildcardVersion::Patch)
+                }
             },
         }
     }
@@ -190,8 +203,12 @@ impl Error for ReqParseError {}
 impl From<String> for ReqParseError {
     fn from(other: String) -> ReqParseError {
         match &*other {
-            "Null is not a valid VersionReq" => ReqParseError::InvalidVersionRequirement,
-            "VersionReq did not parse properly." => ReqParseError::OpAlreadySet,
+            "Null is not a valid VersionReq" => {
+                ReqParseError::InvalidVersionRequirement
+            }
+            "VersionReq did not parse properly." => {
+                ReqParseError::OpAlreadySet
+            }
             _ => ReqParseError::InvalidVersionRequirement,
         }
     }
@@ -477,7 +494,8 @@ impl Predicate {
             Some(patch) => {
                 self.major == ver.major
                     && minor == ver.minor
-                    && (ver.patch > patch || (ver.patch == patch && self.pre_is_compatible(ver)))
+                    && (ver.patch > patch
+                        || (ver.patch == patch && self.pre_is_compatible(ver)))
             }
             None => self.major == ver.major && minor == ver.minor,
         }
@@ -498,17 +516,21 @@ impl Predicate {
             Some(patch) => {
                 if self.major == 0 {
                     if minor == 0 {
-                        ver.minor == minor && ver.patch == patch && self.pre_is_compatible(ver)
+                        ver.minor == minor
+                            && ver.patch == patch
+                            && self.pre_is_compatible(ver)
                     } else {
                         ver.minor == minor
                             && (ver.patch > patch
-                                || (ver.patch == patch && self.pre_is_compatible(ver)))
+                                || (ver.patch == patch
+                                    && self.pre_is_compatible(ver)))
                     }
                 } else {
                     ver.minor > minor
                         || (ver.minor == minor
                             && (ver.patch > patch
-                                || (ver.patch == patch && self.pre_is_compatible(ver))))
+                                || (ver.patch == patch
+                                    && self.pre_is_compatible(ver))))
                 }
             }
             None => {
@@ -532,7 +554,9 @@ impl Predicate {
             Wildcard(Minor) => self.major == ver.major,
             Wildcard(Patch) => {
                 match self.minor {
-                    Some(minor) => self.major == ver.major && minor == ver.minor,
+                    Some(minor) => {
+                        self.major == ver.major && minor == ver.minor
+                    }
                     None => {
                         // minor and patch version astericks mean match on major
                         self.major == ver.major
@@ -635,7 +659,9 @@ mod test {
     fn version(s: &str) -> Version {
         match Version::parse(s) {
             Ok(v) => v,
-            Err(e) => panic!("`{}` is not a valid version. Reason: {:?}", s, e),
+            Err(e) => {
+                panic!("`{}` is not a valid version. Reason: {:?}", s, e)
+            }
         }
     }
 
@@ -673,11 +699,14 @@ mod test {
     fn test_parsing_exact() {
         let r = req("=1.0.0");
 
-        assert!(r.to_string() == "=1.0.0".to_string());
+        assert!(r.to_string() == "=1.0.0");
         assert_eq!(r.to_string(), "=1.0.0".to_string());
 
         assert_match(&r, &["1.0.0"]);
-        assert_not_match(&r, &["1.0.1", "0.9.9", "0.10.0", "0.1.0", "1.0.0-pre"]);
+        assert_not_match(
+            &r,
+            &["1.0.1", "0.9.9", "0.10.0", "0.1.0", "1.0.0-pre"],
+        );
 
         let r = req("=0.9.0");
 
@@ -691,7 +720,10 @@ mod test {
         assert_eq!(r.to_string(), "=0.1.0-beta2.a".to_string());
 
         assert_match(&r, &["0.1.0-beta2.a"]);
-        assert_not_match(&r, &["0.9.1", "0.1.0", "0.1.1-beta2.a", "0.1.0-beta2"]);
+        assert_not_match(
+            &r,
+            &["0.9.1", "0.1.0", "0.1.1-beta2.a", "0.1.0-beta2"],
+        );
     }
 
     #[test]
@@ -803,7 +835,10 @@ mod test {
 
         let r = req("~1.2.3-beta.2");
         assert_match(&r, &["1.2.3", "1.2.4", "1.2.3-beta.2", "1.2.3-beta.4"]);
-        assert_not_match(&r, &["1.3.3", "1.1.4", "1.2.3-beta.1", "1.2.4-beta.2"]);
+        assert_not_match(
+            &r,
+            &["1.3.3", "1.1.4", "1.2.3-beta.1", "1.2.4-beta.2"],
+        );
     }
 
     #[test]
@@ -820,7 +855,10 @@ mod test {
         let r = req("^1.1.2");
         assert_match(&r, &["1.1.2", "1.1.4", "1.2.1"]);
         assert_not_match(&r, &["0.9.1", "2.9.0", "1.1.1", "0.0.1"]);
-        assert_not_match(&r, &["1.1.2-alpha1", "1.1.3-alpha1", "2.9.0-alpha1"]);
+        assert_not_match(
+            &r,
+            &["1.1.2-alpha1", "1.1.3-alpha1", "2.9.0-alpha1"],
+        );
 
         let r = req("^0.1.2");
         assert_match(&r, &["0.1.2", "0.1.4"]);
