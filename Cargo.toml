@@ -38,5 +38,3 @@ serde_derive = "1.0"
 tokio-postgres = "0.5.5"
 tokio = { version = "0.2", features = ["full"] }
 futures = "0.3"
-# postgres-types = { version = "0.1.2", features = ["derive"] }
-# bytes = "0.5.6"
