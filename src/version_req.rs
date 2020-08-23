@@ -30,7 +30,7 @@ use self::WildcardVersion::{Major, Minor, Patch};
 #[cfg_attr(feature = "diesel", derive(AsExpression, FromSqlRow))]
 #[cfg_attr(feature = "diesel", sql_type = "diesel::sql_types::Text")]
 pub struct VersionReq {
-    predicates: Vec<Predicate>,
+    pub predicates: Vec<Predicate>,
 }
 
 impl From<semver_parser::range::VersionReq> for VersionReq {
@@ -90,14 +90,14 @@ impl<'de> Deserialize<'de> for VersionReq {
 }
 
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
-enum WildcardVersion {
+pub enum WildcardVersion {
     Major,
     Minor,
     Patch,
 }
 
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
-enum Op {
+pub enum Op {
     Ex,                        // Exact
     Gt,                        // Greater than
     GtEq,                      // Greater than or equal to
@@ -136,11 +136,11 @@ impl From<semver_parser::range::Op> for Op {
 
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 struct Predicate {
-    op: Op,
-    major: u64,
-    minor: Option<u64>,
-    patch: Option<u64>,
-    pre: Vec<Identifier>,
+    pub op: Op,
+    pub major: u64,
+    pub minor: Option<u64>,
+    pub patch: Option<u64>,
+    pub pre: Vec<Identifier>,
 }
 
 impl From<semver_parser::range::Predicate> for Predicate {

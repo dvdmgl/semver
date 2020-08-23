@@ -21,7 +21,7 @@ async fn connect(s: &str) -> Client {
 async fn test_select_version() {
     let client =
         connect("user=postgres password=postgres host=localhost").await;
-    let result = client.query("SELECT '1.2.0'::semver", &[]).await.unwrap();
+    let result = client.query("SELECT '1.2.0'::semver64", &[]).await.unwrap();
     let ver = result
         .iter()
         .map(|r| r.get::<_, Version>(0))
@@ -30,7 +30,7 @@ async fn test_select_version() {
     assert_eq!(ver, Version::parse("1.2.0").unwrap());
 
     let result = client
-        .query("SELECT '1.2.0-bar'::semver", &[])
+        .query("SELECT '1.2.0-bar'::semver64", &[])
         .await
         .unwrap();
     let ver = result
@@ -41,7 +41,7 @@ async fn test_select_version() {
     assert_eq!(ver, Version::parse("1.2.0-bar").unwrap());
 
     let result = client
-        .query("SELECT '1.2.0+foo'::semver", &[])
+        .query("SELECT '1.2.0+foo'::semver64", &[])
         .await
         .unwrap();
     let ver = result
@@ -52,7 +52,7 @@ async fn test_select_version() {
     assert_eq!(ver, Version::parse("1.2.0+foo").unwrap());
 
     let result = client
-        .query("SELECT '1.2.0-bar+foo'::semver", &[])
+        .query("SELECT '1.2.0-bar+foo'::semver64", &[])
         .await
         .unwrap();
     let ver = result
@@ -72,7 +72,7 @@ async fn test_query_version() {
         .batch_execute(
             "CREATE TEMPORARY TABLE foo (
                 id SERIAL PRIMARY KEY,
-                v SEMVER
+                v SEMVER64
             )",
         )
         .await
